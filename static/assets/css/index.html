@@ -1,0 +1,536 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <title>Layout Test</title>
+        <script src="https://swww.tokbox.com/v2/js/opentok.min.js"></script>
+        <script src="assets/js/jquery.min.js"></script>
+        <script src="assets/js/opentok-layout.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,600' rel='stylesheet' type='text/css'>
+        <script src="assets/js/jquery.modal.min.js"></script>
+        <script type="text/javascript" src="assets/js/easyrtc.js"></script>
+        <script type="text/javascript" src="assets/js/socket.io.js"></script>
+
+				<link rel="stylesheet" type="text/css" href="assets/css/font-awesome.css">
+        <link rel="stylesheet" type="text/css" href="assets/css/style.css">
+        <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="assets/css/fontello.css">
+        <link rel="stylesheet" href="assets/css/jquery.modal.css" />
+        <script type="text/javascript" src="assets/js/demo_multiparty.js"></script>
+        <!-- Mixed content -->
+        <script type="text/javascript" src="https://malsup.github.io/jquery.blockUI.js"> </script>
+				<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+        <style type="text/css" media="screen">
+            body {
+                background-color: #535353 !important;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+
+            video{
+
+                display: inline-block;
+                background-color: #000000;
+                transition-property: all;
+                transition-duration: 0.5s;
+            }
+            #trash-videos{
+                position: fixed;
+                opacity: 0;
+                visibility: hidden;
+            }
+            .footer{
+              left: 0px;
+              right: 230px;
+              height: 50px;
+              position: fixed;
+              bottom: 0px;
+            }
+            .btn-round{
+                font-size: 20px !important;
+                height: 40px !important;
+                width: 40px !important;
+                margin-right: 4px !important;
+                margin-top: 4px !important;
+                background-color: #4584a0 !important;
+                border-color: #4584a0 !important;
+            }
+            .ctrl-holdrs{
+                width: 241px;
+                margin: 0 auto;
+                padding-left: 5px;
+                border-radius: 50px;
+                background-color: #282828;
+                height: 48px;
+            }
+            #chat-holder{
+                top:0;
+                bottom:53px;
+                width: 230px;
+                position: fixed;
+                right: 0px;
+                background-color: #fff;
+            }
+            #layout {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                right: 230px;
+                bottom: 53px;
+
+            }
+
+            .presentation-active{
+                top:0px;
+                bottom: 53px;
+                width: 500px;
+                position: fixed;
+                background-color: #fff;
+            }
+            #currentSlide{
+                width: 100%;
+
+            }
+            #previous{
+                position: absolute;
+                bottom: 0px;
+            }
+            #next{
+                position: absolute;
+                bottom: 0px;
+            }
+            .pagelabal{
+                width: 100px;
+                left: 45%;
+                position: absolute;
+                bottom: 6px;
+            }
+            .pagelabal span{
+                font-weight: bold;
+            }
+            .text-muted {
+              color: #E2E2E2;
+          }
+          a{
+            color: #083942 !important;
+          }
+          .close-icon{
+                font-size: 14px;
+                line-height: 13px;
+                float: left;
+                margin-top: 8px;
+                display: none;
+                margin-left: 2px;
+          }
+          .close-parent{
+                float: left;
+                margin-left: 4px;
+          }
+          .close-parent-mic{
+                float: left;
+                margin-left: 9px;
+          }
+          #mic-close-but{
+            margin-left: 2px;
+          }
+          .full-cover{
+            position: fixed;
+            z-index: 999999999;
+            background-color: #000000;
+            opacity: .7;
+            width: 100%;
+            height: 100%;
+          }
+          .inner-rect{
+            background-color: #555;
+            color: #ffffff;
+            position: fixed;
+            z-index: 99999999999;
+            border-radius: 3px;
+            padding: 15px;
+            width: 380px;
+            height: 212px;
+            top: 30%;
+            left: 38%;
+          }
+          .inner-rect button{
+                width: 70px;
+                margin-left: 138px;
+          }
+        </style>
+        <script>
+
+
+				function runtime(){
+					var rectime;
+					rectime = setInterval(showrecordtime,1000);
+				var dur = 1;
+
+				function showrecordtime() { $('#checktime').val(dur); dur++; }
+				}
+
+        var QueryString = function () {
+              var query_string = {};
+              var query = window.location.search.substring(1);
+              var vars = query.split("&");
+              for (var i=0;i<vars.length;i++) {
+                var pair = vars[i].split("=");
+                if (typeof query_string[pair[0]] === "undefined") {
+                  query_string[pair[0]] = decodeURIComponent(pair[1]);
+                    } else if (typeof query_string[pair[0]] === "string") {
+                  var arr = [ query_string[pair[0]],decodeURIComponent(pair[1]) ];
+                  query_string[pair[0]] = arr;
+                    } else {
+                  query_string[pair[0]].push(decodeURIComponent(pair[1]));
+                }
+              }
+                return query_string;
+            }();
+            // Video ID
+            	var url = window.location.href;
+							var su = url.split('?');
+							var ma = su[1].split('&');
+							var room = ma[0].split('=');
+							var pid = room[1];
+							var video = ma[2].split('=');
+
+            var     roomname            =  QueryString.room;
+            var     user_name           = QueryString.name;
+            var     myimage             = "images/avatar.png";
+            var     screenenable        = QueryString.screen;
+            var     presentation_active = 1;
+						if(video[1]=='12345'){ var ppt_id = 1470032488 } else { var ppt_id = video[1]; runtime(); }
+            var     pptRoot      =  'https://s3-ap-southeast-1.amazonaws.com/bmt.myfiles/';
+            var     currentpage         = '1';
+            var     totalpage           =  18;
+
+
+        </script>
+    </head>
+    <body>
+			<input type="hidden" id="checktime" value="">
+        <div id="layout"></div>
+    <div id="trash-videos">
+        <video id="box0" class="transit boxCommon thumbCommon easyRTCMirror" muted="muted" volume="0" ></video>
+        <video id="box1" class="transit boxCommon thumbCommon"></video>
+        <video id="box2" class="transit boxCommon thumbCommon"></video>
+        <video id="box3" class="transit boxCommon thumbCommon"></video>
+        <video id="box4" class="transit boxCommon thumbCommon"></video>
+        <video id="box5" class="transit boxCommon thumbCommon"></video>
+        <video id="box6" class="transit boxCommon thumbCommon"></video>
+        <video id="box7" class="transit boxCommon thumbCommon"></video>
+        <video id="box8" class="transit boxCommon thumbCommon"></video>
+        <video id="box9" class="transit boxCommon thumbCommon"></video>
+        <video id="box10" class="transit boxCommon thumbCommon"></video>
+        <video id="box11" class="transit boxCommon thumbCommon"></video>
+    </div>
+    <div id="presentation" class="presentation-active">
+       <div style="height:85%;overflow-y:auto;" id="slidesection"><img id="currentSlide"/></div>
+       <a style="left: 10%; width: 32px; border-radius:50%;background:#0099cc;margin-bottom:5px;" id="previous" href="#" class="btn"><i class="fa fa-step-backward" style="color:#fff;"></i></a>
+       <a class="btn" href="#" id="next" style="right: 10%; width: 32px; border-radius:50%;background:#0099cc;margin-bottom:5px;"><i class="fa fa-step-forward" style="color:#fff;"></i></a>
+        <div class="pagelabal">
+            <span class="curpage"> </span> Out Of <span class="totalpage"> </span>
+        </div>
+    </div>
+    <div id="chat-holder">
+          <div id="rightpart" class="box no-margin chat-wraper" style="height:100% " >
+                                <div class="box-header" style="height:8%">
+                                    <h3 style="font-size:18px;" class="box-title text-white"><i class="icon icon-chat"></i> Chat</h3>
+                                    <div title="" data-toggle="tooltip" class="box-tools pull-right" data-original-title="Status">
+                                    </div>
+                                </div>
+
+                                  <div id="chat-box" class="box-body chat" style="overflow: auto; width:100%;overflow-x: hidden;">
+
+                            </div><!-- /.chat -->
+                                <div style="height:8%">
+                                    <input id="message_input" style="height: 100%;" placeholder="Type message..." class="form-control">
+                            </div>
+
+
+        </div>
+    </div>
+    <div class="footer">
+         <div class="ctrl-holdrs">
+            <button id="mic-close" class="btn btn-info btn-round" data-toggle="tooltip" data-placement="right" title="" data-original-title="Share Microphone"><i id="mic-but" class="icon icon-mic"></i><i id="mic-close-but" class="icon icon-cancel close-icon"></i></button>
+            <button  id="cam-close" class="btn btn-info btn-round" data-toggle="tooltip" data-placement="right" title="" data-original-title="Share Webcam"><i id="vid-cam" class="icon icon-videocam"></i><i   id="cam-close-but" class="icon icon-cancel close-icon"></i></button>
+
+            <button  id="chat-close" class="btn btn-info btn-round" data-toggle="tooltip" data-placement="right" title="" data-original-title="Share Webcam"><i id="chat-cam" class="icon icon-chat"></i><i   id="chat-close-but" class="icon icon-cancel close-icon"></i></button>
+
+            <button  id="upload-ppt" class="btn btn-info btn-round" data-toggle="tooltip" data-placement="right" title="" data-original-title="Share Webcam"><i id="upload-ppt-but" class="fa fa-upload"></i><i   id="chat-close-but" class="icon icon-cancel close-icon"></i></button>
+
+            <button id="hide-ppt" class="btn btn-info btn-round" data-toggle="tooltip" data-placement="right" title="" data-original-title="show ppt"><i class="icon icon-monitor" id="hide-ppt-but"></i><i   id="ppt-close-but" class="icon icon-cancel close-icon"></i></button>
+
+          </div>
+    </div>
+    <!--<div id="enterName" class="full-cover" style="display: none;"></div>
+    <div class="inner-rect">
+       <div class="form-group">
+           <label for="usr">Enter Your Room ID:</label>
+           <input type="text" class="form-control" id="room">
+        </div>
+        <div class="form-group">
+           <label for="usr">Enter Your Name:</label>
+            <input type="text" class="form-control" id="name">
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="checkJoin()">Join</button>
+    </div>-->
+    <div id="modal" class="modal" style="display: none;"></div>
+
+    </body>
+
+    <script type="text/javascript" charset="utf-8">
+
+    $('document').ready(function(){
+        if(presentation_active == '1'){
+            presentationAdded();
+        }
+        $('#next').click(function(){
+        if(currentpage < totalpage){
+           currentpage++;
+
+           $('#currentSlide').attr('src',pptRoot+ppt_id+'/'+ppt_id+'_'+currentpage+'.png');
+           setPage();
+
+            var obj         = {};
+            obj['method']   = 'slide_switch';
+            obj['slide']    = currentpage;
+						obj['curslide']    = pptRoot+ppt_id+'/'+ppt_id+'_'+currentpage+'.png';
+            var msg         = JSON.stringify(obj);
+            sendText(msg);
+
+					var pageURL = document.referrer;
+					var curs = pageURL.split('?');
+					//var curdomain = curs[0]+'slidetime.php';
+					$.post('https://demo.trainybee.com/conference/slidetime.php', { pid:pid, pptid:ppt_id, slideno:((currentpage)-1), time:$('#checktime').val() }, function(data){
+						dur = 1;
+					});
+
+        }
+
+
+      })
+      $('#previous').click(function(){
+
+           if(currentpage > 1){
+              currentpage--;
+							 $('#currentSlide').attr('src',pptRoot+ppt_id+'/'+ppt_id+'_'+currentpage+'.png');
+              setPage();
+
+            var obj         = {};
+            obj['method']   = 'slide_switch';
+            obj['slide']    = currentpage;
+						obj['curslide'] = pptRoot+ppt_id+'/'+ppt_id+'_'+currentpage+'.png';
+            var msg         = JSON.stringify(obj);
+            sendText(msg);
+
+          var pageURL = document.referrer;
+					var curs = pageURL.split('?');
+					//var curdomain = curs[0]+'slidetime.php';
+					$.post('https://demo.trainybee.com/conference/slidetime.php', { pid:pid, pptid:ppt_id, slideno:((currentpage)-1), time:$('#checktime').val() }, function(data){
+						dur = 1;
+					});
+
+          }
+      })
+    })
+    function setPage(){
+        $('.curpage').html(currentpage);
+        $('.totalpage').html(totalpage);
+    }
+    function presentationAdded(){
+      if(chatenable == 1){
+           document.getElementById('layout').style.right = '730px';
+           document.getElementById('presentation').style.right = '230px';
+       }else{
+        document.getElementById('layout').style.right = '500px';
+        document.getElementById('presentation').style.right = '0px';
+       }
+				if(ppt_id == '1470032488'){
+				$('#currentSlide').attr('src',pptRoot+ppt_id).attr('style', 'width:50%;margin-top:100px;margin-left:125px;'); $('.pagelabal,#next,#previous').hide(); } else {
+				$('#currentSlide').attr('src',pptRoot+ppt_id+'/'+ppt_id+'_'+currentpage+'.png'); }
+        //$('#currentSlide').attr('src',pptRoot+ppt_id+'/'+ppt_id+'_'+currentpage+'.png');
+
+        $('#ppt-close-but').hide();
+       $('#hide-ppt-but').removeClass('close-parent');
+        $('#presentation').show();
+        setPage();
+        layout();
+    }
+    function presentationRemoved(){
+        if(chatenable == 1){
+           document.getElementById('layout').style.right = '230px';
+       }else{
+           document.getElementById('layout').style.right = '0px';
+       }
+       $('#ppt-close-but').show();
+        $('#hide-ppt-but').addClass('close-parent');
+       $('#presentation').hide();
+       layout();
+    }
+    $("#message_input").keypress(function(event){
+        if(event.keyCode == 13)
+        {
+
+            sendChatMsg();
+
+        }
+    });
+    function sendChatMsg(){
+        var message             = $("#message_input").val();
+        if(message!='')
+        {
+            renderChat(user_name,message,myimage);
+            $("#message_input").val('');
+            var obj         = {};
+            obj['method']   = 'chat';
+            obj['message']  = message;
+            obj['name']     = user_name;
+            obj['image']    = myimage;
+            var msg         = JSON.stringify(obj);
+            sendText(msg);
+        }
+    }
+    function renderChat(name,message,image){
+
+        var chat_html  = '<div class="item">';
+        chat_html += '<img class="online" alt="user image" src="'+image+'">';
+        chat_html += '<p class="message">';
+        chat_html += '<a class="name" href="#">';
+        chat_html += '<small class="text-muted pull-right">';
+        chat_html += '<i class="fa fa-clock-o"></i> '+getTime()+'</small>';
+        chat_html += name+'</a>';
+        chat_html += message+'</p>';
+        chat_html += '</div>';
+        $('#chat-box').append(chat_html);
+        $("#chat-box").scrollTop($("#chat-box").prop("scrollHeight"));
+    }
+    function checkTime(i) {
+    if (i < 10) {
+        i = "0" + i;
+    }
+    return i;
+}
+
+function getTime() {
+    var today = new Date();
+    var h = today.getHours();
+    var m = today.getMinutes();
+    var s = today.getSeconds();
+    // add a zero in front of numbers<10
+    m = checkTime(m);
+    s = checkTime(s);
+    return h + ":" + m + ":" + s;
+
+}
+
+
+    setTimeout(checkVideoInTrash,1000);
+
+
+function checkVideoInTrash(){
+
+        var d = document.getElementById("trash-videos");
+        var s = document.getElementById("layout");
+        var loc = window.location;
+        if (d)
+        {
+
+            for(var i = 0; i < d.childNodes.length; i++)
+            {
+                 var source = d.childNodes[i].src;
+                 if (d.childNodes[i].mozSrcObject !== undefined) {
+                     source= d.childNodes[i].mozSrcObject;
+                 }
+
+                 if(source && source != loc){
+                     s.appendChild(d.childNodes[i]);
+                     layout();
+                 }
+
+            }
+            var vid = $("video");
+                    $.map( vid, function( n, i ) {
+                          n.play();
+                    });
+
+        }
+        if (s)
+        {
+            for(var i = 0; i < s.childNodes.length; i++)
+            {
+                 var source = s.childNodes[i].src;
+                 if (s.childNodes[i].mozSrcObject !== undefined) {
+                     source= s.childNodes[i].mozSrcObject;
+                 }
+
+                 if(source && source != loc){
+
+                 }else{
+                    d.appendChild(s.childNodes[i]);
+                     layout();
+                 }
+
+            }
+
+        }
+        setTimeout(checkVideoInTrash,2000);
+    }
+        var layoutEl = document.getElementById("layout");
+        var layout = initLayoutContainer(layoutEl, {
+            animate: {
+                duration: 500,
+                easing: "swing"
+            },
+            bigFixedRatio: false
+        }).layout;
+
+        function addElement() {
+            var el = document.createElement("div");
+
+
+            layoutEl.appendChild(el);
+            el.innerHTML='<video></video>';
+            layout();
+        }
+        var resizeTimeout;
+        window.onresize = function() {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(function () {
+            layout();
+          }, 20);
+        };
+/*
+        $("#layout").live("dblclick", function () {
+            if ($(this).hasClass("OT_big")) {
+                $(this).removeClass("OT_big");
+            } else {
+                $(this).addClass("OT_big");
+            }
+            layout();
+        });*/
+
+setInterval(function(){
+	//~ $.post('https://demo.trainybee.com/conference/miscellanious.php?m=newjoinees', { pid:pid }, function(data){
+		//~ alert(data);
+		var msg = 'Joined to the Presentation';
+		var username = 'Mahesh';
+		var myimg = "images/avatar.png";
+		if(data!='')
+		{
+				renderChat(username,msg,myimg);
+				var obj         = {};
+				obj['method']   = 'chat';
+				obj['message']  = msg;
+				obj['name']     = user-name;
+				obj['image']    = myimg;
+				var msg         = JSON.stringify(obj);
+				sendText(msg);
+		}
+	//});
+}, 3000);
+    </script>
+</html>
+
